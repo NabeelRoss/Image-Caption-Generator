@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caption Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            transition: transform 0.3s ease;
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 25px 0;
+        }
+
+        .app-title {
+            background: -webkit-linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.1);
+        }
+
+        .btn-magic {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(118, 75, 162, 0.3);
+            background: linear-gradient(45deg, #5a6fd1, #6b4294);
+        }
+
+        /* Result Area Styling */
+        .result-container {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border-left: 5px solid #764ba2;
+            padding: 20px;
+            border-radius: 12px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .quote-icon {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            color: rgba(118, 75, 162, 0.1);
+        }
+
+        .uploaded-img {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            width: 100%;
+        }
+
+        .uploaded-img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Loading Spinner */
+        .spinner-overlay {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card main-card">
+        <div class="card-header text-center">
+            <h2 class="mb-0 app-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Caption Generator</h2>
+            <p class="text-muted mb-0 small mt-1">Instant AI descriptions for your photos</p>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+            <form method="post" enctype="multipart/form-data" onsubmit="showLoader()">
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark"><i class="fa-regular fa-image me-2"></i>Upload Photo</label>
+                    <input type="file" class="form-control" name="image" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark"><i class="fa-solid fa-sliders me-2"></i>Choose Vibe</label>
+                    <select class="form-select" name="style">
+                        <option value="regular" {% if style == 'regular' %}selected{% endif %}>🤖 Standard Description</option>
+                        <option value="social" {% if style == 'social' %}selected{% endif %}>📸 Instagram / Social</option>
+                        <option value="professional" {% if style == 'professional' %}selected{% endif %}>👔 Professional / LinkedIn</option>
+                        <option value="poetic" {% if style == 'poetic' %}selected{% endif %}>🌑 Poetic / Aesthetic</option>
+                        <option value="roast" {% if style == 'roast' %}selected{% endif %}>🔥 Roast My Pic</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-magic w-100 py-3 mt-2">
+                    <span id="btn-text">Generate Caption ✨</span>
+                    <div id="loader" class="spinner-overlay">
+                        <div class="spinner-border spinner-border-sm text-light" role="status"></div>
+                        <span>Generating...</span>
+                    </div>
+                </button>
+            </form>
+
+            {% if caption %}
+            <div class="mt-5 result-container">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="fw-bold text-secondary text-uppercase small">Result</label>
+                    <span class="badge bg-light text-dark border">{{ style|capitalize }} Mode</span>
+                </div>
+                
+                <div class="result-box">
+                    <i class="fa-solid fa-quote-right quote-icon"></i>
+                    <p class="fs-5 mb-0" style="color: #2d3748; line-height: 1.6;">{{ caption }}</p>
+                </div>
+
+                {% if filename %}
+                <div class="text-center">
+                    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image" class="uploaded-img">
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showLoader() {
+            document.getElementById('btn-text').style.display = 'none';
+            document.getElementById('loader').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
